@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: Whatsapp-Clone
+      POSTGRES_PASSWORD: Whatsapp-Clone123
+      POSTGRES_DB: Whatsapp-Clone
+    ports:
+      - "5434:5432"
