@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './Chat/chat.module';
 import { SocketGateway } from './gateway/socket.gateway';
+import { UserModule } from './user/user.module';
+import { GroupMoudle } from './group/group.module';
 
 @Module({
     imports: [
@@ -13,6 +15,8 @@ import { SocketGateway } from './gateway/socket.gateway';
         DatabaseModule,
         AuthModule,
         ChatModule,
+        UserModule,
+        GroupMoudle,
     ],
     controllers: [],
     providers: [SocketGateway],

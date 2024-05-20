@@ -32,12 +32,11 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         }
 
         // cheeck password with hash
-        const hashed = await argon.verify(Password, user.Password);
+        const hashed = await argon.verify(user.Password, Password);
 
         // if get right then return user
         if (hashed) {
-            const { ...result } = user;
-            return result;
+            return user;
         } else {
             throw new HttpException('Wrong Password!', HttpStatus.UNAUTHORIZED);
         }

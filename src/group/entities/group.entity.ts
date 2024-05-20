@@ -3,16 +3,20 @@ import { AbstractEntity } from 'src/database/abstract.entity';
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 @Entity()
-export class Chat extends AbstractEntity<Chat> {
-    // user_1 connect with userid
-    @OneToOne(() => User)
+export class Group extends AbstractEntity<Group> {
+    @OneToOne(() => User, (user) => user.id)
     @JoinColumn()
-    user_1: User;
-    // user_2
-    @OneToOne(() => User)
-    @JoinColumn()
-    user_2: User;
-    // meassages list
+    owner: User;
+
+    @Column()
+    group_name: string;
+
+    @Column('jsonb', { nullable: true })
+    members: any[];
+
     @Column('jsonb', { nullable: true })
     meassages: any[];
+
+    @Column()
+    Created_At: Date;
 }

@@ -18,11 +18,8 @@ export class AuthService {
         // signin by mobile number
         // decrept password
         return {
-            username: user.username,
-            token: this.jwt.sign({
-                id: user.id,
-                MobileNumber: user.MobileNumber,
-            }),
+            username: user.Username,
+            token: this.jwt.sign({ sub: user.id, number: user.MobileNumber }),
         };
     }
 
@@ -43,11 +40,15 @@ export class AuthService {
 
             const hash = await argon.hash(dto.Password);
 
+            const date = await new Date();
             const user = new User({
                 MobileNumber: dto.MobileNumber,
                 Password: hash,
                 UserName: dto.UserName,
+                Created_At: date,
             });
+
+            await this.userRepository.save(user);
 
             if (user) {
                 throw new HttpException(
