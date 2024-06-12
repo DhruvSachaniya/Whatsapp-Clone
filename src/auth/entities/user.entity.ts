@@ -16,7 +16,7 @@ export class User extends AbstractEntity<User> {
 
     // group
 
-    //contact
+    //contact it will store the chat id's or group id's
 
     @Column()
     Created_At: Date;

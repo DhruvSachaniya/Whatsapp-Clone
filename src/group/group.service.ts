@@ -134,6 +134,7 @@ export class GroupService {
                 },
                 relations: {
                     owner: true,
+                    group: true,
                 },
                 cache: true,
             });
@@ -145,14 +146,16 @@ export class GroupService {
                 );
             }
 
-            // if (!find_group.owner === user.id) {
-            //     if (!find_group.members.includes(user.id)) {
-            //         throw new HttpException(
-            //             `You ain't in this group!`,
-            //             HttpStatus.BAD_REQUEST,
-            //         );
-            //     }
-            // }
+            const group = find_group[0];
+
+            if (!group.owner === user.id) {
+                if (!group.group.members.includes(user.id)) {
+                    throw new HttpException(
+                        `You ain't in this group!`,
+                        HttpStatus.BAD_REQUEST,
+                    );
+                }
+            }
 
             return find_group;
         } catch (error) {
@@ -167,7 +170,7 @@ export class GroupService {
                 id: dto.group_id,
             });
 
-            if (!find_group.owner === user.id) {
+            if (find_group.owner.id !== user.id) {
                 if (!find_group.members.includes(user.id)) {
                     throw new HttpException(
                         `no Right to this group`,
@@ -177,6 +180,7 @@ export class GroupService {
             }
 
             //user can't delete everyone meassages in group, meassage can be delete by one side
+            //TODO-Implement: create visible or notvisible boolean for meassage
         } catch (error) {
             throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
