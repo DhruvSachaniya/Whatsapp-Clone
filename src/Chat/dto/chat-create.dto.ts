@@ -1,4 +1,4 @@
 export class ChatCreateDto {
-    ownerid: number;
-    reciverid: number;
+    user1: number;
+    user2: number;
 }

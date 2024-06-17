@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 export class UserController {
     constructor(private readonly userservice: UserService) {}
 
-    //Todo:1 search group by only those user has joined,
+    //Todo:1 search group by only those user has joined, upload user photo, update photo --> pending
 
     @UseGuards(JwtAuthGuard)
     @Get('details')

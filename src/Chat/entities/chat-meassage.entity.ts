@@ -1,6 +1,7 @@
 import { User } from 'src/auth/entities/user.entity';
 import { AbstractEntity } from 'src/database/abstract.entity';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Chat } from './chat.entity';
 
 @Entity()
 export class ChatMeassage extends AbstractEntity<ChatMeassage> {
@@ -8,11 +9,18 @@ export class ChatMeassage extends AbstractEntity<ChatMeassage> {
     meassage: string;
 
     //will require -> who's created, one chat will have only one owner, and who's to send
-    @OneToOne(() => User)
+    @ManyToOne(() => User, (user) => user.id)
     @JoinColumn()
-    ownerId: number;
+    ownerId: User;
 
-    @OneToOne(() => User)
+    @ManyToOne(() => User, (user) => user.id)
     @JoinColumn()
-    receiverId: number;
+    receiverId: User;
+
+    @ManyToOne(() => Chat, (chat) => chat.id)
+    @JoinColumn()
+    ChatId: Chat;
+
+    @Column({ nullable: true })
+    Created_At: Date;
 }

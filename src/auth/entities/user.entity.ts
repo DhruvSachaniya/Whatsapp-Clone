@@ -12,11 +12,15 @@ export class User extends AbstractEntity<User> {
     @Column()
     Password: string;
 
-    // chat
+    @Column('text', { nullable: true })
+    UserPhotoUrl: string;
 
-    // group
+    @Column('jsonb', { nullable: true })
+    groupcontacts: any[];
 
     //contact it will store the chat id's or group id's
+    @Column('jsonb', { nullable: true })
+    chatcontacts: any[];
 
     @Column()
     Created_At: Date;

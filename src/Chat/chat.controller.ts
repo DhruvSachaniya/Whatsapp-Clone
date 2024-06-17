@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Post,
+    Request,
+    UseGuards,
+} from '@nestjs/common';
 import { Server } from 'socket.io';
 import {
     MessageBody,
@@ -9,6 +17,8 @@ import { SocketGateway } from 'src/gateway/socket.gateway';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 import { ChatCreateDto } from './dto/chat-create.dto';
+import { ChatMeassageDto } from './dto/chat-meassage.dto';
+import { ChatDeleteDto } from './dto/chat-delete.dto';
 
 @Controller('chat')
 export class ChatController {
@@ -36,6 +46,24 @@ export class ChatController {
     @Post('create')
     createchat(@Request() req, @Body() dto: ChatCreateDto) {
         return this.chatservice.createchat(req.user, dto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('meassage')
+    post_chat_meassage(@Request() req, @Body() dto: ChatMeassageDto) {
+        return this.chatservice.post_chat_meassage(req.user, dto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('meassage')
+    get_chat_meassage(@Request() req, @Body('receiverId') receiverId: number) {
+        return this.chatservice.get_chat_meassages(req.user, receiverId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('meassage')
+    delete_chat_meassage(@Request() req, @Body() dto: ChatDeleteDto) {
+        return this.chatservice.delete_chat_meassages(req.user, dto);
     }
     // subscribermeassage will be created by user mobilenumber
 }
