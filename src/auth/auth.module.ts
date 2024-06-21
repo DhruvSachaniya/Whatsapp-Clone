@@ -10,6 +10,7 @@ import { Chat } from 'src/Chat/entities/chat.entity';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { LocalAuthGuard } from './guard/local.guard';
 import { Group } from 'src/group/entities/group.entity';
+import { CyptoSecurity } from 'src/Services/security';
 
 @Module({
     imports: [
@@ -21,6 +22,12 @@ import { Group } from 'src/group/entities/group.entity';
         TypeOrmModule.forFeature([User, Chat, Group]),
     ],
     controllers: [AuthController],
-    providers: [AuthService, LocalStrategy, JwtStrategy, LocalAuthGuard],
+    providers: [
+        AuthService,
+        LocalStrategy,
+        JwtStrategy,
+        LocalAuthGuard,
+        CyptoSecurity,
+    ],
 })
 export class AuthModule {}
