@@ -28,7 +28,7 @@ export class AuthService {
         // signup using mobile number and username
         // encrypt password using argon
         //TODO:- add recovery code to verified for long time when generate otp
-        //TODO --> encryption, decryption
+
         try {
             const valid = this.isValid_Mobile_Number(
                 dto.MobileNumber.toString(),
@@ -40,8 +40,6 @@ export class AuthService {
                     HttpStatus.BAD_REQUEST,
                 );
             }
-            const usernameencrypt = await this.crypto.encrypt(dto.UserName);
-            console.log('encrypted', usernameencrypt);
 
             const already_user = await this.userRepository.findOneBy({
                 MobileNumber: dto.MobileNumber,

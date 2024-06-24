@@ -9,6 +9,7 @@ import { GroupMessage } from 'src/group/entities/group-chat.entity';
 import { Chat } from './entities/chat.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatMeassage } from './entities/chat-meassage.entity';
+import { CyptoSecurity } from 'src/Services/security';
 
 @Module({
     imports: [
@@ -21,6 +22,6 @@ import { ChatMeassage } from './entities/chat-meassage.entity';
         ]),
     ],
     controllers: [ChatController],
-    providers: [ChatService, JwtStrategy, SocketGateway],
+    providers: [ChatService, JwtStrategy, SocketGateway, CyptoSecurity],
 })
 export class ChatModule {}

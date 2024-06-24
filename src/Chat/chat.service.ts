@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { ChatMeassageDto } from './dto/chat-meassage.dto';
 import { ChatMeassage } from './entities/chat-meassage.entity';
 import { ChatDeleteDto } from './dto/chat-delete.dto';
+import { CyptoSecurity } from 'src/Services/security';
 
 @Injectable({})
 export class ChatService {
@@ -14,6 +15,7 @@ export class ChatService {
         private readonly ChatRepository: Repository<Chat>,
         @InjectRepository(ChatMeassage)
         private readonly ChatMeassageRepo: Repository<ChatMeassage>,
+        private cryptotech: CyptoSecurity,
     ) {}
 
     async createchat(user: any, dto: ChatCreateDto) {
@@ -68,11 +70,14 @@ export class ChatService {
             }
 
             const date = new Date();
+            //encrypt the meassage
+            const encrypt_chat = await this.cryptotech.encrypt(dto.meassage);
 
             const create_chat_meassage = new ChatMeassage({
                 ownerId: user.id,
                 receiverId: Number(dto.reciverid) as null,
-                meassage: dto.meassage,
+                meassage: encrypt_chat,
+                ChatId: find_chat[0],
                 Created_At: date,
             });
 
