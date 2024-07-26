@@ -9,6 +9,9 @@ export class User extends AbstractEntity<User> {
     @Column('text')
     UserName: string;
 
+    @Column('text', { nullable: true })
+    Email: string;
+
     @Column()
     Password: string;
 

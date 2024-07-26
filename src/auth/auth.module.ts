@@ -11,6 +11,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
 import { LocalAuthGuard } from './guard/local.guard';
 import { Group } from 'src/group/entities/group.entity';
 import { CyptoSecurity } from 'src/Services/security';
+import { EmailMoudle } from 'src/Services/email/email.module';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { CyptoSecurity } from 'src/Services/security';
             signOptions: { expiresIn: '1h' },
         }),
         TypeOrmModule.forFeature([User, Chat, Group]),
+        EmailMoudle,
     ],
     controllers: [AuthController],
     providers: [

@@ -6,6 +6,7 @@ import { SignUpDto } from './dto/signup.dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { CyptoSecurity } from 'src/Services/security';
+import { EmailService } from 'src/Services/email/email.service';
 @Injectable({})
 export class AuthService {
     constructor(
@@ -13,6 +14,7 @@ export class AuthService {
         private userRepository: Repository<User>,
         private jwt: JwtService,
         private crypto: CyptoSecurity,
+        private emailService: EmailService,
     ) {}
 
     SignIn(user: any) {
@@ -25,8 +27,6 @@ export class AuthService {
     }
 
     async SignUp(dto: SignUpDto) {
-        // signup using mobile number and username
-        // encrypt password using argon
         //TODO:- add recovery code to verified for long time when generate otp
 
         try {
@@ -51,16 +51,23 @@ export class AuthService {
                     HttpStatus.CONFLICT,
                 );
             }
+            //otp section
+            const otp = await this.geRandomOtp(999999);
+
+            await this.emailService.sendUserEmail(dto, otp);
 
             const hash = await argon.hash(dto.Password);
 
-            const date = await new Date();
+            const date = new Date();
             const user = new User({
                 MobileNumber: dto.MobileNumber,
                 Password: hash,
                 UserName: dto.UserName,
+                Email: dto.Email,
                 Created_At: date,
             });
+
+            //until otp doesn't get equal to genrated otp dont save user
 
             // await this.userRepository.save(user);
 
@@ -87,5 +94,9 @@ export class AuthService {
         } else {
             return false;
         }
+    }
+
+    async geRandomOtp(max: number) {
+        return Math.floor(Math.random() * max);
     }
 }

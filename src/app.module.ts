@@ -6,6 +6,7 @@ import { ChatModule } from './Chat/chat.module';
 import { SocketGateway } from './gateway/socket.gateway';
 import { UserModule } from './user/user.module';
 import { GroupMoudle } from './group/group.module';
+import { EmailMoudle } from './Services/email/email.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { GroupMoudle } from './group/group.module';
         ChatModule,
         UserModule,
         GroupMoudle,
+        EmailMoudle,
     ],
     controllers: [],
     providers: [SocketGateway],
