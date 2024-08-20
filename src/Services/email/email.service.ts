@@ -14,7 +14,6 @@ export class EmailService {
                 to: dto.Email,
                 subject: 'Welcome to Dhruv App!',
                 text: 'welcome',
-                // template: 'login-otp', // Adjusted template path
                 html: `
                 <head>
                     <meta charset="UTF-8" />
