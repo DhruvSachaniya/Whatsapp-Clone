@@ -31,6 +31,13 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
             throw new HttpException('not found!', HttpStatus.NOT_FOUND);
         }
 
+        if (!user.IsValidated) {
+            throw new HttpException(
+                'User has not been Valideted. Please Varify Otp Again!',
+                HttpStatus.UNAUTHORIZED,
+            );
+        }
+
         // cheeck password with hash
         const hashed = await argon.verify(user.Password, Password);
 

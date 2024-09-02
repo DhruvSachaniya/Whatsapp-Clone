@@ -5,5 +5,13 @@ import { Column, Entity } from 'typeorm';
 export class Otp extends AbstractEntity<Otp> {
     @Column('int')
     Otp: number;
-    //when created,
+
+    @Column('text')
+    email: string;
+
+    @Column('timestamp')
+    createdat: string;
+
+    @Column('timestamp')
+    expireat: string;
 }

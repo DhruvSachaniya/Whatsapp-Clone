@@ -7,11 +7,16 @@ import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { CyptoSecurity } from 'src/Services/security';
 import { EmailService } from 'src/Services/email/email.service';
+import { OtpVarifyDto } from './dto/otpvarify.dto';
+import { Otp } from './entities/otp.entity';
+import * as moment from 'moment-timezone';
 @Injectable({})
 export class AuthService {
     constructor(
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        @InjectRepository(Otp)
+        private otpRepository: Repository<Otp>,
         private jwt: JwtService,
         private crypto: CyptoSecurity,
         private emailService: EmailService,
@@ -40,19 +45,36 @@ export class AuthService {
                     HttpStatus.BAD_REQUEST,
                 );
             }
-
-            const already_user = await this.userRepository.findOneBy({
-                MobileNumber: dto.MobileNumber,
+            //TODO:- Imeplement that the user should only signup those who hasn't been valideted
+            const already_user = await this.userRepository.find({
+                where: [
+                    { MobileNumber: dto.MobileNumber },
+                    { Email: dto.Email },
+                ],
             });
 
             if (already_user) {
-                throw new HttpException(
-                    'Mobile Number Already Exists',
-                    HttpStatus.CONFLICT,
-                );
+                if (already_user[0].IsValidated) {
+                    throw new HttpException(
+                        'User is Already Exists',
+                        HttpStatus.CONFLICT,
+                    );
+                }
             }
             //otp section
             const otp = await this.geRandomOtp(999999);
+
+            const currentTimeIST = moment().tz('Asia/Kolkata');
+
+            const expireTimeIST = currentTimeIST.clone().add(2, 'minutes');
+            const create_otp = new Otp({
+                email: dto.Email,
+                Otp: otp,
+                createdat: currentTimeIST.format('YYYY-MM-DD HH:mm:ss'),
+                expireat: expireTimeIST.format('YYYY-MM-DD HH:mm:ss'),
+            });
+
+            await this.otpRepository.save(create_otp);
 
             await this.emailService.sendUserEmail(dto, otp);
 
@@ -67,9 +89,7 @@ export class AuthService {
                 Created_At: date,
             });
 
-            //until otp doesn't get equal to genrated otp dont save user
-
-            // await this.userRepository.save(user);
+            await this.userRepository.save(user);
 
             if (user) {
                 throw new HttpException(
@@ -79,6 +99,56 @@ export class AuthService {
             }
         } catch (error) {
             throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async VarifyOtp(dto: OtpVarifyDto) {
+        try {
+            const found_otp = await this.otpRepository.findOneBy({
+                Otp: Number(dto.otp),
+            });
+
+            if (!found_otp) {
+                throw new HttpException(
+                    'Otp Not Found or Not Valid!',
+                    HttpStatus.NOT_FOUND,
+                );
+            }
+
+            const currentTimeIST = moment().tz('Asia/Kolkata');
+
+            const expireTimeIST = moment.tz(found_otp.expireat, 'Asia/Kolkata');
+
+            if (currentTimeIST.isBefore(expireTimeIST)) {
+                // OTP is still valid
+                const user = await this.userRepository.findOneBy({
+                    Email: found_otp.email,
+                });
+
+                if (user) {
+                    user.IsValidated = true; // Mark the user as validated
+                    await this.userRepository.save(user);
+                    return {
+                        message:
+                            'OTP verified successfully, user is now validated.',
+                    };
+                } else {
+                    throw new HttpException(
+                        'User not found!',
+                        HttpStatus.NOT_FOUND,
+                    );
+                }
+            } else {
+                throw new HttpException(
+                    'OTP has expired',
+                    HttpStatus.BAD_REQUEST,
+                );
+            }
+        } catch (err) {
+            throw new HttpException(
+                err.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 

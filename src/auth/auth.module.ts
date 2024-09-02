@@ -12,6 +12,7 @@ import { LocalAuthGuard } from './guard/local.guard';
 import { Group } from 'src/group/entities/group.entity';
 import { CyptoSecurity } from 'src/Services/security';
 import { EmailMoudle } from 'src/Services/email/email.module';
+import { Otp } from './entities/otp.entity';
 
 @Module({
     imports: [
@@ -20,7 +21,7 @@ import { EmailMoudle } from 'src/Services/email/email.module';
             secret: 'THEREISNOSECRET',
             signOptions: { expiresIn: '1h' },
         }),
-        TypeOrmModule.forFeature([User, Chat, Group]),
+        TypeOrmModule.forFeature([User, Otp, Chat, Group]),
         EmailMoudle,
     ],
     controllers: [AuthController],

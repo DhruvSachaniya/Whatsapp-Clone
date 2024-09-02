@@ -9,6 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
 import { LocalAuthGuard } from './guard/local.guard';
+import { OtpVarifyDto } from './dto/otpvarify.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -17,6 +18,11 @@ export class AuthController {
     @Get('user')
     async SignUp(@Body() dto: SignUpDto) {
         return this.authservice.SignUp(dto);
+    }
+
+    @Post('varify')
+    async VarifyOtp(@Body() dto: OtpVarifyDto) {
+        return this.authservice.VarifyOtp(dto);
     }
 
     @UseGuards(LocalAuthGuard)
