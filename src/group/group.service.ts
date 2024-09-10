@@ -15,6 +15,8 @@ export class GroupService {
         private readonly groupmeassagerepo: Repository<GroupMessage>,
     ) {}
 
+    //TODO:- Invite and Join Group
+
     async create_group(user: any, group_name: string) {
         // will require who is creating group, and group name
         try {

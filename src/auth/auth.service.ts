@@ -35,17 +35,19 @@ export class AuthService {
         //TODO:- add recovery code to verified for long time when generate otp
 
         try {
+            //Validate Mobile Num
             const valid = this.isValid_Mobile_Number(
                 dto.MobileNumber.toString(),
             );
 
-            if ((await valid) == false) {
+            if (!valid) {
                 throw new HttpException(
                     'Not Valid Number!',
                     HttpStatus.BAD_REQUEST,
                 );
             }
-            //TODO:- Imeplement that the user should only signup those who hasn't been valideted
+
+            //Check if User Already Exits
             const already_user = await this.userRepository.find({
                 where: [
                     { MobileNumber: dto.MobileNumber },
@@ -53,31 +55,30 @@ export class AuthService {
                 ],
             });
 
-            if (already_user) {
-                if (already_user[0].IsValidated) {
-                    throw new HttpException(
-                        'User is Already Exists',
-                        HttpStatus.CONFLICT,
-                    );
-                }
+            if (already_user.length > 0 && already_user[0].IsValidated) {
+                throw new HttpException(
+                    'User is Already Exists',
+                    HttpStatus.CONFLICT,
+                );
             }
+
             //otp section
             const otp = await this.geRandomOtp(999999);
-
             const currentTimeIST = moment().tz('Asia/Kolkata');
-
             const expireTimeIST = currentTimeIST.clone().add(2, 'minutes');
+
             const create_otp = new Otp({
                 email: dto.Email,
                 Otp: otp,
                 createdat: currentTimeIST.format('YYYY-MM-DD HH:mm:ss'),
                 expireat: expireTimeIST.format('YYYY-MM-DD HH:mm:ss'),
             });
-
             await this.otpRepository.save(create_otp);
 
+            //Send OTP Email
             await this.emailService.sendUserEmail(dto, otp);
 
+            //Hash Password and Save User
             const hash = await argon.hash(dto.Password);
 
             const date = new Date();
