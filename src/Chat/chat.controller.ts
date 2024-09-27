@@ -16,7 +16,6 @@ import {
 import { SocketGateway } from 'src/gateway/socket.gateway';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
-import { ChatCreateDto } from './dto/chat-create.dto';
 import { ChatMeassageDto } from './dto/chat-meassage.dto';
 import { ChatDeleteDto } from './dto/chat-delete.dto';
 
@@ -26,8 +25,6 @@ export class ChatController {
         private readonly socketgateway: SocketGateway,
         private chatservice: ChatService,
     ) {}
-
-    //TODO:- create one to one chat, create chat_meassage entity,
 
     @WebSocketServer()
     private server: Server;
@@ -42,11 +39,6 @@ export class ChatController {
     }
     // user_1 will be get by jwtguard
     // user_2 number come by paramerter
-    @UseGuards(JwtAuthGuard)
-    @Post('create')
-    createchat(@Request() req, @Body() dto: ChatCreateDto) {
-        return this.chatservice.createchat(req.user, dto);
-    }
 
     @UseGuards(JwtAuthGuard)
     @Post('meassage')
@@ -65,5 +57,4 @@ export class ChatController {
     delete_chat_meassage(@Request() req, @Body() dto: ChatDeleteDto) {
         return this.chatservice.delete_chat_meassages(req.user, dto);
     }
-    // subscribermeassage will be created by user mobilenumber
 }

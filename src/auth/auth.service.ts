@@ -21,7 +21,7 @@ export class AuthService {
         private crypto: CyptoSecurity,
         private emailService: EmailService,
     ) {}
-
+    //TODO:- Update name, password, email, photo,
     SignIn(user: any) {
         // signin by mobile number
         // decrept password

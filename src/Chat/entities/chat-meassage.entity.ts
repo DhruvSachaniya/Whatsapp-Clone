@@ -23,4 +23,7 @@ export class ChatMeassage extends AbstractEntity<ChatMeassage> {
 
     @Column({ nullable: true })
     Created_At: Date;
+
+    @Column({ default: true })
+    IsActive: boolean;
 }

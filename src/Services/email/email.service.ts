@@ -29,4 +29,28 @@ export class EmailService {
             console.log(error, 'from email service!');
         }
     }
+
+    async SendSecuritycode(dto: SignUpDto, code: string) {
+        const Name = dto.UserName;
+
+        try {
+            await this.mailerService.sendMail({
+                to: dto.Email,
+                from: 'From Dhruv App!',
+                text: 'Security Code',
+                html: `
+                <head>
+                    <meta charset="UTF-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                    <title>Changing Password Request</title>
+                </head>
+                <body>
+                    <p>Hello ${Name},</p>
+                    <p>Your Security Code is: ${code}</p>
+                </body>`,
+            });
+        } catch (err) {
+            console.log(err, 'Error from Email SendCode!');
+        }
+    }
 }
