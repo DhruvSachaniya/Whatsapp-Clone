@@ -36,7 +36,7 @@ export class EmailService {
         try {
             await this.mailerService.sendMail({
                 to: dto.Email,
-                from: 'From Dhruv App!',
+                subject: 'From Dhruv App!',
                 text: 'Security Code',
                 html: `
                 <head>

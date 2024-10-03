@@ -5,9 +5,10 @@ import { Repository } from 'typeorm';
 import { UpdateNameDto } from './dto/name.dto';
 import { ForgetPasswordDto } from './dto/forgetpass.dto';
 import { EmailService } from 'src/Services/email/email.service';
-import moment from 'moment-timezone';
+import * as moment from 'moment-timezone';
 import { SecurityCode } from './entities/code.entity';
 import { VarifyCodeDto } from './dto/varifycode.dto';
+import * as crypto from 'crypto';
 
 @Injectable({})
 export class UserService {
@@ -111,7 +112,7 @@ export class UserService {
             }
 
             //CODE Functionality
-            const code = Math.random().toString(36).substring(2, 10);
+            const code = crypto.randomBytes(4).toString('hex');
             const currentTimeIST = moment().tz('Asia/Kolkata');
             const expireTimeIST = currentTimeIST.clone().add(5, 'minutes');
 
@@ -126,11 +127,12 @@ export class UserService {
             //email Functionality
             await this.emailService.SendSecuritycode(find_user_emaail, code);
 
-            throw new HttpException(
-                'Code Has Sent To Registerd Mail!',
-                HttpStatus.CREATED,
-            );
+            return {
+                message: 'Code has been sent to registered mail',
+                status: HttpStatus.OK,
+            };
         } catch (err) {
+            console.log(err);
             throw new HttpException(err, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -150,7 +152,7 @@ export class UserService {
                 );
             }
 
-            const currentTimeIST = moment.tz('Asia/Kolkata');
+            const currentTimeIST = moment().tz('Asia/Kolkata');
 
             const expireTimeIST = moment.tz(
                 found_code.expireat,
@@ -166,10 +168,10 @@ export class UserService {
                 });
 
                 if (user && user.IsValidated) {
-                    throw new HttpException(
-                        'Can Change Password',
-                        HttpStatus.ACCEPTED,
-                    );
+                    return {
+                        message: 'can change Password!',
+                        status: HttpStatus.OK,
+                    };
                 } else {
                     throw new HttpException(
                         'User Is Not Validate',
@@ -177,10 +179,10 @@ export class UserService {
                     );
                 }
             } else {
-                throw new HttpException(
-                    'Code Has Expired!',
-                    HttpStatus.BAD_REQUEST,
-                );
+                return {
+                    message: 'Code has Expired!',
+                    status: HttpStatus.NOT_ACCEPTABLE,
+                };
             }
         } catch (err) {
             throw new HttpException(
