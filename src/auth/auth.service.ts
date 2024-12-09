@@ -55,7 +55,7 @@ export class AuthService {
                 ],
             });
 
-            if (already_user.length > 0 && already_user[0].IsValidated) {
+            if (already_user.length > 0) {
                 throw new HttpException(
                     'User is Already Exists',
                     HttpStatus.CONFLICT,

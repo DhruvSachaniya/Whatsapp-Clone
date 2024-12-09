@@ -16,6 +16,8 @@ import { EmailService } from './email.service';
                         user: cfg.get('SMTP_USERNAME'),
                         pass: cfg.get('SMTP_PASSWORD'),
                     },
+                    debug: true,
+                    logger: true,
                 },
                 defaults: {
                     from: `"Whatsapp-Clone" <${cfg.get('SMTP_USERNAME')}`,

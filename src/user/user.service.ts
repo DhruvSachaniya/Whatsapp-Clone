@@ -9,6 +9,8 @@ import * as moment from 'moment-timezone';
 import { SecurityCode } from './entities/code.entity';
 import { VarifyCodeDto } from './dto/varifycode.dto';
 import * as crypto from 'crypto';
+import { ChangePasswordDto } from './dto/changepass.dto';
+import * as argon2 from 'argon2';
 
 @Injectable({})
 export class UserService {
@@ -192,5 +194,43 @@ export class UserService {
         }
     }
 
-    async Change_Password() {}
+    async Change_Password(dto: ChangePasswordDto) {
+        //will require new password, confirm password, email
+        try {
+            const find_user = await this.userRepository.findOne({
+                where: {
+                    Email: dto.RegEmail,
+                },
+            });
+
+            if (find_user && find_user.IsValidated) {
+                //change process
+                if (dto.newPass !== dto.confirmPass) {
+                    throw new HttpException(
+                        'Password Does not Match',
+                        HttpStatus.NOT_ACCEPTABLE,
+                    );
+                }
+                const hash = await argon2.hash(dto.newPass);
+
+                find_user.Password = hash;
+                await this.userRepository.save(find_user);
+
+                return {
+                    message: 'Password Changed Successfully!',
+                    status: HttpStatus.OK,
+                };
+            } else {
+                return {
+                    message: 'user is not Varified!',
+                    status: HttpStatus.NOT_ACCEPTABLE,
+                };
+            }
+        } catch (err) {
+            throw new HttpException(
+                err.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
 }
