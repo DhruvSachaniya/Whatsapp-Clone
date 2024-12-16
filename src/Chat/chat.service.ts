@@ -20,7 +20,7 @@ export class ChatService {
         private cryptotech: CyptoSecurity,
     ) {}
     //TODO:- Update the chat Message
-    async post_chat_meassage(user: any, dto: ChatMeassageDto) {
+    async post_chat_meassage(user: any, dto: ChatMeassageDto): Promise<any> {
         try {
             //fetch receiver by dto
             const receiver = await this.UserRepo.findOne({
@@ -123,6 +123,13 @@ export class ChatService {
                     user_2: { id: Number(receiverId) },
                 },
             });
+
+            if (!find_chat) {
+                return {
+                    message: 'No Chat Found',
+                    status: HttpStatus.NOT_FOUND,
+                };
+            }
 
             const get_messages = await this.ChatMeassageRepo.find({
                 where: {

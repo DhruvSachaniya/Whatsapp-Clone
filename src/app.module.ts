@@ -7,6 +7,7 @@ import { SocketGateway } from './gateway/socket.gateway';
 import { UserModule } from './user/user.module';
 import { GroupMoudle } from './group/group.module';
 import { EmailMoudle } from './Services/email/email.module';
+import { CloudinaryModule } from './Services/helpers/cloudify.module';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { EmailMoudle } from './Services/email/email.module';
         UserModule,
         GroupMoudle,
         EmailMoudle,
+        CloudinaryModule,
     ],
     controllers: [],
     providers: [SocketGateway],

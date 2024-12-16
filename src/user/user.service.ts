@@ -11,6 +11,7 @@ import { VarifyCodeDto } from './dto/varifycode.dto';
 import * as crypto from 'crypto';
 import { ChangePasswordDto } from './dto/changepass.dto';
 import * as argon2 from 'argon2';
+import * as Multer from 'multer';
 
 @Injectable({})
 export class UserService {
@@ -231,6 +232,41 @@ export class UserService {
                 err.message,
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
+        }
+    }
+
+    //upload profile picture
+    async uploadProfilePicture(user: any, url: any) {
+        try {
+            if (!url) {
+                throw new HttpException(
+                    'Error Uploading Profile Picture',
+                    HttpStatus.NOT_FOUND,
+                );
+            }
+
+            const find_user = await this.userRepository.findOne({
+                where: { id: user.id },
+            });
+
+            if (!find_user) {
+                throw new HttpException('User Not Found', HttpStatus.NOT_FOUND);
+            }
+
+            find_user.UserPhotoUrl = url;
+
+            await this.userRepository.save(find_user);
+
+            return {
+                message: 'Profile Picture Uploaded Successfully',
+                find_user,
+            };
+        } catch (err) {
+            // Handle Multer-specific errors
+            if (err instanceof Multer.MulterError) {
+                throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
+            }
+            throw err; // Rethrow other errors
         }
     }
 }

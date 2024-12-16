@@ -7,6 +7,8 @@ import { Chat } from 'src/Chat/entities/chat.entity';
 import { Group } from 'src/group/entities/group.entity';
 import { EmailMoudle } from 'src/Services/email/email.module';
 import { SecurityCode } from './entities/code.entity';
+import { CloudinaryService } from 'src/Services/helpers/cloudify.service';
+import { CloudinaryProvider } from 'src/Services/helpers/cloudify.provider';
 
 @Module({
     imports: [
@@ -14,6 +16,7 @@ import { SecurityCode } from './entities/code.entity';
         EmailMoudle,
     ],
     controllers: [UserController],
-    providers: [UserService],
+    providers: [UserService, CloudinaryProvider, CloudinaryService],
+    exports: [CloudinaryService],
 })
 export class UserModule {}
