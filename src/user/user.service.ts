@@ -109,7 +109,7 @@ export class UserService {
 
             if (!find_user_emaail || !find_user_emaail.IsValidated) {
                 throw new HttpException(
-                    'Error In the Email!',
+                    'Email Does not Exits!',
                     HttpStatus.NOT_FOUND,
                 );
             }
