@@ -7,7 +7,7 @@ import {
     Request,
     UseGuards,
 } from '@nestjs/common';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import {
     MessageBody,
     SubscribeMessage,
@@ -29,17 +29,6 @@ export class ChatController {
     @WebSocketServer()
     private server: Server;
 
-    @SubscribeMessage('832022')
-    onNewMeassage(@MessageBody() body: any) {
-        this.server.emit('832022', {
-            msg: 'dhruv',
-            content: body,
-        });
-        console.log('Received message:', body);
-    }
-    // user_1 will be get by jwtguard
-    // user_2 number come by paramerter
-
     @UseGuards(JwtAuthGuard)
     @Post('meassage')
     post_chat_meassage(@Request() req, @Body() dto: ChatMeassageDto) {
@@ -56,5 +45,35 @@ export class ChatController {
     @Delete('meassage')
     delete_chat_meassage(@Request() req, @Body() dto: ChatDeleteDto) {
         return this.chatservice.delete_chat_meassages(req.user, dto);
+    }
+
+    @Post('register')
+    register(@Body() body: { userId: string; socketId: string }) {
+        console.log(
+            'Registering user with ID:',
+            body.userId,
+            'Socket ID:',
+            body.socketId,
+        );
+        const mockSocket = { id: body.socketId } as Socket;
+        this.socketgateway.registerUser(body, mockSocket);
+    }
+
+    @Post('postMessage')
+    sendMessage(
+        @Body() body: { toUserId: string; message: string; socketId: string },
+    ) {
+        // Ensure the socketId is passed correctly, and we pass the correct mock socket
+        const mockSocket = { id: body.socketId } as Socket;
+
+        if (!mockSocket.id) {
+            console.error('Socket ID is missing');
+            return;
+        }
+
+        this.socketgateway.sendMessage(
+            { toUserId: body.toUserId, message: body.message },
+            mockSocket,
+        );
     }
 }

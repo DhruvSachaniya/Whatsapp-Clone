@@ -93,10 +93,10 @@ export class AuthService {
             await this.userRepository.save(user);
 
             if (user) {
-                throw new HttpException(
-                    'created succesfully!',
-                    HttpStatus.CREATED,
-                );
+                return {
+                    message: 'User created successfully!',
+                    status: HttpStatus.CREATED,
+                };
             }
         } catch (error) {
             throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -132,6 +132,7 @@ export class AuthService {
                     return {
                         message:
                             'OTP verified successfully, user is now validated.',
+                        status: HttpStatus.CREATED,
                     };
                 } else {
                     throw new HttpException(

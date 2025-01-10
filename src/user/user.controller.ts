@@ -49,7 +49,7 @@ export class UserController {
         return this.userservice.update_user_name(req.user, dto);
     }
 
-    @Get('password')
+    @Post('password')
     async Forget_password(@Body() dto: ForgetPasswordDto) {
         return this.userservice.Forget_Password(dto);
     }
