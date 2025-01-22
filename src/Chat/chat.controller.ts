@@ -47,33 +47,34 @@ export class ChatController {
         return this.chatservice.delete_chat_meassages(req.user, dto);
     }
 
-    @Post('register')
-    register(@Body() body: { userId: string; socketId: string }) {
-        console.log(
-            'Registering user with ID:',
-            body.userId,
-            'Socket ID:',
-            body.socketId,
-        );
-        const mockSocket = { id: body.socketId } as Socket;
-        this.socketgateway.registerUser(body, mockSocket);
-    }
+    // @Post('register')
+    // register(@Body() body: { userId: string; socketId: string }) {
+    //     console.log(
+    //         'Registering user with ID:',
+    //         body.userId,
+    //         'Socket ID:',
+    //         body.socketId,
+    //     );
+    //     const mockSocket = { id: body.socketId } as Socket;
+    //     this.socketgateway.registerUser(body, mockSocket);
+    // }
 
-    @Post('postMessage')
-    sendMessage(
-        @Body() body: { toUserId: string; message: string; socketId: string },
-    ) {
-        // Ensure the socketId is passed correctly, and we pass the correct mock socket
-        const mockSocket = { id: body.socketId } as Socket;
+    // @Post('postMessage')
+    // sendMessage(
+    //     @Body() body: { toUserId: string; message: string; socketId: string },
+    // ) {
+    //     console.log('1', body);
+    //     // Ensure the socketId is passed correctly, and we pass the correct mock socket
+    //     const mockSocket = { id: body.socketId } as Socket;
 
-        if (!mockSocket.id) {
-            console.error('Socket ID is missing');
-            return;
-        }
+    //     if (!mockSocket.id) {
+    //         console.error('Socket ID is missing');
+    //         return;
+    //     }
 
-        this.socketgateway.sendMessage(
-            { toUserId: body.toUserId, message: body.message },
-            mockSocket,
-        );
-    }
+    //     this.socketgateway.sendMessage(
+    //         { toUserId: body.toUserId, message: body.message },
+    //         mockSocket,
+    //     );
+    // }
 }

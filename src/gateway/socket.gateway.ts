@@ -10,11 +10,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway(8080, { cors: { origin: '*' } }) // Adding CORS settings if needed
+@WebSocketGateway(8080, { cors: { origin: '*' } })
 export class SocketGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-    users: { [key: string]: string } = {};
+    users: { [key: string]: string } = {}; // Map userId to socketId
 
     @WebSocketServer()
     server: Server;
@@ -24,21 +24,22 @@ export class SocketGateway
     }
 
     handleConnection(client: Socket) {
+        console.log('Client connected:');
         console.log('User connected with socketId:', client.id);
-        // Register the socketId for a user
-        this.users[client.id] = client.id;
-        console.log('Current users:', this.users);
     }
 
-    handleDisconnect(client: any) {
-        console.log('Client disconnected', client.id);
-        // Remove user from the mapping when disconnected
+    handleDisconnect(client: Socket) {
+        console.log('Client disconnected:', client.id);
+
+        // Remove the user mapping when a user disconnects
         for (const [userId, socketId] of Object.entries(this.users)) {
             if (socketId === client.id) {
                 delete this.users[userId];
                 break;
             }
         }
+
+        this.broadcastUserList();
     }
 
     @SubscribeMessage('register')
@@ -46,38 +47,49 @@ export class SocketGateway
         @MessageBody() data: { userId: string },
         @ConnectedSocket() client: Socket,
     ) {
-        // Register user with socket ID
-        console.log('client', client.id);
-        console.log(
-            `User registered: ${data.userId} with socketId: ${client.id}`,
-        );
+        // Check if the user is already registered
+        if (this.users[data.userId]) {
+            console.log(
+                `User ${data.userId} is already registered with socketId ${this.users[data.userId]}`,
+            );
+            return;
+        }
+
+        // Register the user with their socket ID
         this.users[data.userId] = client.id;
+        // console.log(
+        //     `User ${data.userId} registered with socketId ${client.id}`,
+        // );
+        this.broadcastUserList();
     }
 
+    //NOTE:- For now the double message one is chnaged base on timestamp varification
     @SubscribeMessage('privateMessage')
     sendMessage(
         @MessageBody() data: { toUserId: string; message: string },
-        @ConnectedSocket() client: Socket, // Ensure that client is valid
+        @ConnectedSocket() client: Socket,
     ) {
-        // Log the users object to check if the recipient is registered
-        console.log('Current users:', client.id);
+        const recipientSocketId = this.users[data.toUserId];
 
-        // Log the data for debugging
-        console.log('Received privateMessage event with data:', data);
-
-        // Lookup the socket ID of the recipient user
-        const socketId = this.users[data.toUserId];
-        console.log('Sending message to socketId:', socketId);
-
-        // Ensure the socketId exists
-        if (socketId) {
-            // Send the message to the correct socket ID
-            this.server.to(socketId).emit('privateMessage', {
-                from: client.id, // Send the message from the client ID (sender)
+        if (recipientSocketId) {
+            const msg = {
+                from: client.id,
                 message: data.message,
-            });
+                timestamp: Date.now(), // Add a unique timestamp
+            };
+
+            // Send the message to the recipient
+            this.server
+                .to(recipientSocketId)
+                .emit('privateMessageReceived', msg);
+
+            console.log('Message sent:', msg);
         } else {
-            console.log('User not found for', data.toUserId);
+            console.log('Recipient not connected:', data.toUserId);
         }
+    }
+
+    private broadcastUserList() {
+        this.server.emit('userList', this.users);
     }
 }
