@@ -25,6 +25,7 @@ export class UserService {
 
     async user_detail(MobileNumber: number) {
         try {
+            //TODO:- Don't send password in response
             const user = await this.userRepository.findOne({
                 where: { MobileNumber },
             });
