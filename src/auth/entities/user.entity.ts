@@ -1,5 +1,5 @@
 import { AbstractEntity } from 'src/database/abstract.entity';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
 
 @Entity()
 export class User extends AbstractEntity<User> {
@@ -18,11 +18,21 @@ export class User extends AbstractEntity<User> {
     @Column('text', { nullable: true })
     UserPhotoUrl: string;
 
-    @Column('jsonb', { nullable: true })
-    groupcontacts: any[];
-
-    @Column('jsonb', { nullable: true })
-    chatcontacts: any[];
+    @ManyToMany(() => User, (user) => user.chatcontacts, {
+        cascade: ['insert', 'update'],
+    })
+    @JoinTable({
+        name: 'user_chatcontacts', // The table name for the join table
+        joinColumn: {
+            name: 'user_id',
+            referencedColumnName: 'id',
+        },
+        inverseJoinColumn: {
+            name: 'contact_id',
+            referencedColumnName: 'id',
+        },
+    })
+    chatcontacts: User[]; // List of contacts for this user
 
     @Column()
     Created_At: Date;

@@ -12,6 +12,7 @@ import * as crypto from 'crypto';
 import { ChangePasswordDto } from './dto/changepass.dto';
 import * as argon2 from 'argon2';
 import * as Multer from 'multer';
+import { stat } from 'fs';
 
 @Injectable({})
 export class UserService {
@@ -25,21 +26,28 @@ export class UserService {
 
     async user_detail(MobileNumber: number) {
         try {
-            //TODO:- Don't send password in response
+            // Fetch the user and include their contacts
             const user = await this.userRepository.findOne({
                 where: { MobileNumber },
+                relations: ['chatcontacts'], // Include chatcontacts in the query
             });
 
             if (!user) {
                 throw new HttpException(
-                    'mobile number not  found!',
+                    'Mobile number not found!',
                     HttpStatus.NOT_FOUND,
                 );
             }
 
-            return user;
+            // Optionally remove the password from the response
+            const { Password, ...userWithoutPassword } = user;
+
+            return userWithoutPassword;
         } catch (error) {
-            throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException(
+                error.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 
@@ -268,6 +276,46 @@ export class UserService {
                 throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
             }
             throw err; // Rethrow other errors
+        }
+    }
+
+    //add User to contacts
+    async addContact(userId: number, contactId: number): Promise<any> {
+        try {
+            const user = await this.userRepository.findOne({
+                where: { id: userId },
+                relations: ['chatcontacts'],
+            });
+
+            const contact = await this.userRepository.findOne({
+                where: { id: contactId },
+                relations: ['chatcontacts'],
+            });
+
+            if (!user || !contact) {
+                throw new HttpException(
+                    'User or contact not found',
+                    HttpStatus.NOT_FOUND,
+                );
+            }
+
+            if (!user.chatcontacts.find((c) => c.id === contactId)) {
+                user.chatcontacts.push(contact);
+            }
+
+            if (!contact.chatcontacts.find((c) => c.id === userId)) {
+                contact.chatcontacts.push(user);
+            }
+
+            // Save the changes
+            await this.userRepository.save(user);
+
+            return {
+                message: 'Contact added successfully',
+                status: HttpStatus.OK,
+            };
+        } catch (err) {
+            throw new HttpException(err, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

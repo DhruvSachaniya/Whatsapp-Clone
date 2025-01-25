@@ -73,6 +73,7 @@ export class SocketGateway
 
         if (recipientSocketId) {
             const msg = {
+                from_number: data.toUserId,
                 from: client.id,
                 message: data.message,
                 timestamp: Date.now(), // Add a unique timestamp
@@ -83,7 +84,7 @@ export class SocketGateway
                 .to(recipientSocketId)
                 .emit('privateMessageReceived', msg);
 
-            console.log('Message sent:', msg);
+            // console.log('Message sent:', msg);
         } else {
             console.log('Recipient not connected:', data.toUserId);
         }

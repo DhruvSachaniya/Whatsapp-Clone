@@ -19,7 +19,7 @@ import { Otp } from './entities/otp.entity';
         PassportModule,
         JwtModule.register({
             secret: 'THEREISNOSECRET',
-            signOptions: { expiresIn: '1h' },
+            signOptions: { expiresIn: '1d' },
         }),
         TypeOrmModule.forFeature([User, Otp, Chat, Group]),
         EmailMoudle,

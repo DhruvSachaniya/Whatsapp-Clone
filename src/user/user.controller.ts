@@ -19,6 +19,7 @@ import { VarifyCodeDto } from './dto/varifycode.dto';
 import { ChangePasswordDto } from './dto/changepass.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from 'src/Services/helpers/cloudify.service';
+import { AddContactDto } from './dto/addcontacts.dto';
 
 @Controller('user')
 export class UserController {
@@ -41,6 +42,13 @@ export class UserController {
         @Query('Name') Name: string,
     ) {
         return this.userservice.Search_in_User(MobileNumber, Name);
+    }
+
+    //add User to contacts
+    @UseGuards(JwtAuthGuard)
+    @Post('addcontact')
+    async Add_Contact(@Body() dto: AddContactDto) {
+        return this.userservice.addContact(dto.userId, dto.contactId);
     }
 
     @UseGuards(JwtAuthGuard)
