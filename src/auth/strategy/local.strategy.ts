@@ -33,7 +33,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
         if (!user.IsValidated) {
             throw new HttpException(
-                'User has not been Valideted. Please Varify Otp Again!',
+                'User has not been Valideted. Please Signup Again!',
                 HttpStatus.UNAUTHORIZED,
             );
         }
