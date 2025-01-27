@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -10,8 +10,11 @@ import { EmailService } from 'src/Services/email/email.service';
 import { OtpVarifyDto } from './dto/otpvarify.dto';
 import { Otp } from './entities/otp.entity';
 import * as moment from 'moment-timezone';
+
 @Injectable({})
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     constructor(
         @InjectRepository(User)
         private userRepository: Repository<User>,
@@ -21,132 +24,123 @@ export class AuthService {
         private crypto: CyptoSecurity,
         private emailService: EmailService,
     ) {}
-    //TODO:- Update name, password, email, photo,
+
     SignIn(user: any) {
-        // signin by mobile number
-        // decrept password
         return {
             username: user.Username,
-            token: this.jwt.sign({ sub: user.id, number: user.MobileNumber }),
+            token: this.jwt.sign({ sub: user.id }),
         };
     }
 
     async SignUp(dto: SignUpDto) {
-        //TODO:- add recovery code to verified for long time when generate otp
-
         try {
-            //Validate Mobile Num
-            const valid = this.isValid_Mobile_Number(
-                dto.MobileNumber.toString(),
-            );
-
-            if (!valid) {
+            if (!this.isValid_Mobile_Number(dto.MobileNumber.toString())) {
                 throw new HttpException(
-                    'Not Valid Number!',
+                    'Invalid Mobile Number!',
                     HttpStatus.BAD_REQUEST,
                 );
             }
 
-            //Check if User Already Exits
-            const already_user = await this.userRepository.find({
+            const existingUsers = await this.userRepository.find({
                 where: [
                     { MobileNumber: dto.MobileNumber },
                     { Email: dto.Email },
                 ],
             });
 
-            if (already_user.length > 0) {
+            if (existingUsers.length > 0) {
+                const existingUser = existingUsers[0];
+
+                if (existingUser.IsValidated === false) {
+                    //TODO:- also update the user values but only name and password
+                    //update Username and Password
+                    existingUser.UserName = dto.UserName;
+                    existingUser.Password = await argon.hash(dto.Password);
+
+                    await this.userRepository.save(existingUser);
+
+                    //clear old otp
+                    await this.otpRepository.delete({ email: dto.Email });
+                    const otp = await this.generateOtp(dto.Email);
+
+                    await this.emailService.sendUserEmail(dto, otp.Otp);
+                    return {
+                        message:
+                            'User details updated. OTP sent again. Please verify your account!',
+                        status: HttpStatus.CREATED,
+                    };
+                }
+
                 throw new HttpException(
-                    'User is Already Exists',
+                    'User already exists!',
                     HttpStatus.CONFLICT,
                 );
             }
 
-            //otp section
-            const otp = await this.geRandomOtp(999999);
-            const currentTimeIST = moment().tz('Asia/Kolkata');
-            const expireTimeIST = currentTimeIST.clone().add(2, 'minutes');
+            const otp = await this.generateOtp(dto.Email);
+            await this.emailService.sendUserEmail(dto, otp.Otp);
 
-            const create_otp = new Otp({
-                email: dto.Email,
-                Otp: otp,
-                createdat: currentTimeIST.format('YYYY-MM-DD HH:mm:ss'),
-                expireat: expireTimeIST.format('YYYY-MM-DD HH:mm:ss'),
-            });
-            await this.otpRepository.save(create_otp);
-
-            //Send OTP Email
-            await this.emailService.sendUserEmail(dto, otp);
-
-            //Hash Password and Save User
-            const hash = await argon.hash(dto.Password);
-
-            const date = new Date();
+            const hashedPassword = await argon.hash(dto.Password);
             const user = new User({
                 MobileNumber: dto.MobileNumber,
-                Password: hash,
+                Password: hashedPassword,
                 UserName: dto.UserName,
                 Email: dto.Email,
-                Created_At: date,
+                Created_At: new Date(),
             });
 
             await this.userRepository.save(user);
-
-            if (user) {
-                return {
-                    message: 'User created successfully!',
-                    status: HttpStatus.CREATED,
-                };
-            }
+            return {
+                message: 'User created successfully!',
+                status: HttpStatus.CREATED,
+            };
         } catch (error) {
-            throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+            this.logger.error('Error during SignUp:', error.message);
+            throw new HttpException(
+                'An error occurred. Please try again later.',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 
     async VarifyOtp(dto: OtpVarifyDto) {
         try {
-            const found_otp = await this.otpRepository.findOneBy({
+            const otp = await this.otpRepository.findOneBy({
                 Otp: Number(dto.otp),
             });
-
-            if (!found_otp) {
+            if (!otp)
                 throw new HttpException(
-                    'Otp Not Found or Not Valid!',
+                    'OTP not found or invalid!',
                     HttpStatus.NOT_FOUND,
                 );
-            }
 
-            const currentTimeIST = moment().tz('Asia/Kolkata');
-
-            const expireTimeIST = moment.tz(found_otp.expireat, 'Asia/Kolkata');
-
-            if (currentTimeIST.isBefore(expireTimeIST)) {
-                // OTP is still valid
-                const user = await this.userRepository.findOneBy({
-                    Email: found_otp.email,
-                });
-
-                if (user) {
-                    user.IsValidated = true; // Mark the user as validated
-                    await this.userRepository.save(user);
-                    return {
-                        message:
-                            'OTP verified successfully, user is now validated.',
-                        status: HttpStatus.CREATED,
-                    };
-                } else {
-                    throw new HttpException(
-                        'User not found!',
-                        HttpStatus.NOT_FOUND,
-                    );
-                }
-            } else {
+            const isExpired = moment()
+                .tz('Asia/Kolkata')
+                .isAfter(moment.tz(otp.expireat, 'Asia/Kolkata'));
+            if (isExpired)
                 throw new HttpException(
                     'OTP has expired',
                     HttpStatus.BAD_REQUEST,
                 );
-            }
+
+            const user = await this.userRepository.findOneBy({
+                Email: otp.email,
+            });
+            if (!user)
+                throw new HttpException(
+                    'User not found!',
+                    HttpStatus.NOT_FOUND,
+                );
+
+            user.IsValidated = true;
+            await this.userRepository.save(user);
+
+            return {
+                message: 'OTP verified successfully!',
+                status: HttpStatus.CREATED,
+            };
         } catch (err) {
+            this.logger.error('Error during OTP verification:', err.message);
             throw new HttpException(
                 err.message,
                 HttpStatus.INTERNAL_SERVER_ERROR,
@@ -154,21 +148,28 @@ export class AuthService {
         }
     }
 
-    async isValid_Mobile_Number(mobile_number: string) {
-        const regex = new RegExp(/(0|91)?[6-9][0-9]{9}/);
+    async generateOtp(email: string): Promise<Otp> {
+        const otp = await this.geRandomOtp(999999);
+        const currentTimeIST = moment().tz('Asia/Kolkata');
+        const expireTimeIST = currentTimeIST.clone().add(2, 'minutes');
 
-        if (mobile_number == null) {
-            return false;
-        }
+        const newOtp = new Otp({
+            email,
+            Otp: otp,
+            createdat: currentTimeIST.format('YYYY-MM-DD HH:mm:ss'),
+            expireat: expireTimeIST.format('YYYY-MM-DD HH:mm:ss'),
+        });
 
-        if (regex.test(mobile_number) == true) {
-            return true;
-        } else {
-            return false;
-        }
+        await this.otpRepository.save(newOtp);
+        return newOtp;
     }
 
-    async geRandomOtp(max: number) {
+    isValid_Mobile_Number(mobile_number: string): boolean {
+        const regex = /(0|91)?[6-9][0-9]{9}/;
+        return regex.test(mobile_number);
+    }
+
+    async geRandomOtp(max: number): Promise<number> {
         return Math.floor(Math.random() * max);
     }
 }

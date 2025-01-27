@@ -13,7 +13,6 @@ import {
     SubscribeMessage,
     WebSocketServer,
 } from '@nestjs/websockets';
-import { SocketGateway } from 'src/gateway/socket.gateway';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 import { ChatMeassageDto } from './dto/chat-meassage.dto';
@@ -21,10 +20,7 @@ import { ChatDeleteDto } from './dto/chat-delete.dto';
 
 @Controller('chat')
 export class ChatController {
-    constructor(
-        private readonly socketgateway: SocketGateway,
-        private chatservice: ChatService,
-    ) {}
+    constructor(private chatservice: ChatService) {}
 
     @WebSocketServer()
     private server: Server;

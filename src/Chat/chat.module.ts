@@ -22,6 +22,6 @@ import { CyptoSecurity } from 'src/Services/security';
         ]),
     ],
     controllers: [ChatController],
-    providers: [ChatService, JwtStrategy, SocketGateway, CyptoSecurity],
+    providers: [ChatService, JwtStrategy, CyptoSecurity],
 })
 export class ChatModule {}
