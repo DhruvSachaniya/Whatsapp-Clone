@@ -90,6 +90,15 @@ export class SocketGateway
         }
     }
 
+    sendMessageToUser(toUserId: string, message: any) {
+        const socketId = this.users[toUserId];
+        if (socketId) {
+            this.server.to(socketId).emit('privateMessageReceived', message);
+        } else {
+            console.log('User is offline:', toUserId);
+        }
+    }
+
     private broadcastUserList() {
         this.server.emit('userList', this.users);
     }
