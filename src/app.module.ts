@@ -23,6 +23,6 @@ import { CloudinaryModule } from './Services/helpers/cloudify.module';
         CloudinaryModule,
     ],
     controllers: [],
-    providers: [SocketGateway],
+    providers: [],
 })
 export class AppModule {}

@@ -7,6 +7,7 @@ import { ChatMeassage } from './entities/chat-meassage.entity';
 import { ChatDeleteDto } from './dto/chat-delete.dto';
 import { CyptoSecurity } from 'src/Services/security';
 import { User } from 'src/auth/entities/user.entity';
+import { SocketGateway } from 'src/gateway/socket.gateway';
 
 @Injectable({})
 export class ChatService {
@@ -18,14 +19,16 @@ export class ChatService {
         @InjectRepository(User)
         private readonly UserRepo: Repository<User>,
         private cryptotech: CyptoSecurity,
+        private readonly socketGateway: SocketGateway,
     ) {}
     //TODO:- Update the chat Message
     async post_chat_meassage(user: any, dto: ChatMeassageDto): Promise<any> {
         try {
+            console.log('form chat post', user, dto);
             //fetch receiver by dto
             const receiver = await this.UserRepo.findOne({
                 where: {
-                    id: Number(dto.reciverid),
+                    MobileNumber: Number(dto.reciverNumber),
                 },
             });
 
@@ -38,7 +41,7 @@ export class ChatService {
             const find_chat = await this.ChatRepository.findOne({
                 where: {
                     user_1: { id: user.id },
-                    user_2: { id: Number(dto.reciverid) },
+                    user_2: { MobileNumber: Number(dto.reciverNumber) },
                 },
             });
 
@@ -77,6 +80,13 @@ export class ChatService {
 
                 await this.ChatRepository.save(Create_new_chat);
 
+                //Emit real-time update via sockets
+                this.socketGateway.sendMessageToUser(String(receiver.id), {
+                    fromUserId: user.id,
+                    message: dto.meassage,
+                    timestamp: date,
+                });
+
                 return {
                     Create_new_chat,
                     creat_chat_message,
@@ -85,7 +95,8 @@ export class ChatService {
 
             const create_chat_meassage = new ChatMeassage({
                 ownerId: user.id,
-                receiverId: Number(dto.reciverid) as null,
+                // receiverId: Number(dto.reciverid) as null,
+                receiverId: receiver,
                 meassage: encrypt_chat,
                 ChatId: find_chat,
                 Created_At: date,
@@ -104,6 +115,12 @@ export class ChatService {
 
             await this.ChatRepository.save(find_chat);
 
+            //Emit real-time update via sockets
+            this.socketGateway.sendMessageToUser(String(receiver.id), {
+                fromUserId: user.id,
+                message: dto.meassage,
+                timestamp: date,
+            });
             return {
                 find_chat,
                 create_chat_meassage,
@@ -113,14 +130,14 @@ export class ChatService {
         }
     }
 
-    async get_chat_meassages(user: any, receiverId: number) {
+    async get_chat_meassages(user: any, receiverNumber: number) {
         try {
             //will require owner and receiver id's
 
             const find_chat = await this.ChatRepository.findOne({
                 where: {
                     user_1: { id: user.id },
-                    user_2: { id: Number(receiverId) },
+                    user_2: { MobileNumber: Number(receiverNumber) },
                 },
             });
 
