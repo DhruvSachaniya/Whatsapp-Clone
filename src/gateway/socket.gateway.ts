@@ -66,14 +66,15 @@ export class SocketGateway
     //NOTE:- For now the double message one is chnaged base on timestamp varification
     @SubscribeMessage('privateMessage')
     sendMessage(
-        @MessageBody() data: { toUserId: string; message: string },
+        @MessageBody()
+        data: { toUserId: string; message: string; from_number: string },
         @ConnectedSocket() client: Socket,
     ) {
         const recipientSocketId = this.users[data.toUserId];
 
         if (recipientSocketId) {
             const msg = {
-                from_number: data.toUserId,
+                from_number: data.from_number,
                 from: client.id,
                 message: data.message,
                 timestamp: Date.now(), // Add a unique timestamp
@@ -100,6 +101,7 @@ export class SocketGateway
     }
 
     private broadcastUserList() {
+        console.log('Broadcasting user list:', this.users);
         this.server.emit('userList', this.users);
     }
 }
