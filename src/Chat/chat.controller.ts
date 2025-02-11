@@ -4,6 +4,7 @@ import {
     Delete,
     Get,
     Post,
+    Query,
     Request,
     UseGuards,
 } from '@nestjs/common';
@@ -28,10 +29,10 @@ export class ChatController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get('meassage')
-    get_chat_meassage(
+    @Get('message')
+    get_chat_messages(
         @Request() req,
-        @Body('receiverNumber') receiverNumber: number,
+        @Query('receiverNumber') receiverNumber: number, // Use @Query instead of @Body
     ) {
         return this.chatservice.get_chat_meassages(req.user, receiverNumber);
     }

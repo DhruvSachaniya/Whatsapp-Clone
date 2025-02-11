@@ -1,89 +1,73 @@
-import {
-    createCipheriv,
-    createDecipheriv,
-    randomBytes,
-    randomFill,
-    scrypt,
-} from 'crypto';
+import * as CryptoJS from 'crypto-js';
 
 export class CyptoSecurity {
     constructor() {}
 
-    encrypt = async (data: string) => {
-        const encrypted = await this._encrypt(data);
+    // Encryption function
+    encrypt = (data: string, password: string): string => {
+        // Generate a random salt
+        const salt = CryptoJS.lib.WordArray.random(128 / 8).toString(
+            CryptoJS.enc.Hex,
+        );
 
-        return `${encrypted}`;
-    };
-
-    decrypt = async (data: string) => {
-        return await this._decrypt(data);
-    };
-
-    _encrypt = async (data: string): Promise<string> => {
-        const algoritham = 'aes-192-cbc';
-        const salt = randomBytes(8).toString('hex');
-
-        return new Promise((resolve, reject) => {
-            scrypt(
-                'Password is used to generate key' as string,
-                salt,
-                24,
-                (err, key) => {
-                    if (err) reject(err);
-
-                    randomFill(new Uint8Array(16), (err, iv) => {
-                        const ivHex = Buffer.from(iv).toString('hex');
-                        if (err) reject(err);
-
-                        const cipher = createCipheriv(algoritham, key, iv);
-
-                        let encrypted = cipher.update(data, 'utf-8', 'hex');
-                        encrypted += cipher.final('hex');
-
-                        const result = `${salt}|${ivHex}|${encrypted}`;
-                        resolve(result);
-                    });
-                },
-            );
+        // Derive the key using PBKDF2
+        const key = CryptoJS.PBKDF2(password, salt, {
+            keySize: 192 / 32, // 192 bits = 24 bytes
+            iterations: 1,
         });
+
+        // Generate a random IV
+        const iv = CryptoJS.lib.WordArray.random(128 / 8);
+
+        // Encrypt the data
+        const encrypted = CryptoJS.AES.encrypt(data, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7,
+        });
+
+        // Combine salt, IV, and encrypted data into a single string
+        return `${salt}|${iv.toString(CryptoJS.enc.Hex)}|${encrypted.toString()}`;
     };
 
-    _decrypt = async (encryptedData: string): Promise<string> => {
-        const algorithm = 'aes-192-cbc';
+    // Decryption function
+    decrypt = (encryptedData: string, password: string): string => {
+        const [salt, ivHex, encrypted] = encryptedData.split('|');
 
-        return new Promise((resolve, reject) => {
-            const [salt, ivHex, encrypted] = encryptedData.split('|');
+        if (!salt || !ivHex || !encrypted) {
+            throw new Error('Invalid encrypted data');
+        }
 
-            if (!salt || !ivHex || !encrypted)
-                reject(new Error('Invalid data'));
-
-            const iv = Buffer.from(ivHex, 'hex');
-
-            scrypt(
-                'Password is used to generate key' as string,
-                salt,
-                24,
-                (err, key) => {
-                    if (err) reject(err);
-
-                    const decipher = createDecipheriv(algorithm, key, iv);
-
-                    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-                    decrypted += decipher.final('utf8');
-
-                    resolve(decrypted);
-                },
-            );
+        // Derive the key using PBKDF2
+        const key = CryptoJS.PBKDF2(password, salt, {
+            keySize: 192 / 32, // 192 bits = 24 bytes
+            iterations: 1,
         });
+
+        // Convert IV from hex to WordArray
+        const iv = CryptoJS.enc.Hex.parse(ivHex);
+
+        // Decrypt the data
+        const decrypted = CryptoJS.AES.decrypt(encrypted, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7,
+        });
+
+        // Convert the decrypted data to a UTF-8 string
+        return decrypted.toString(CryptoJS.enc.Utf8);
     };
 }
 
-// export const encrypt = async (data: string) => {
-//     const encrypted = await _encrypt(data);
+// Example usage
+const crypto = new CyptoSecurity();
+const password = 'Password is used to generate key';
+const data = 'Hello, this is a secret message!';
 
-//     return `${encrypted}`;
-// };
+// Encrypt
+const encrypted = crypto.encrypt(data, password);
+// console.log('Encrypted:', encrypted);
 
-// export const decrypt = async (data: string) => {
-//     return await _decrypt(data);
-// };
+// Decrypt
+const decrypted = crypto.decrypt(encrypted, password);
+// console.log('Decrypted:', decrypted);
