@@ -79,12 +79,12 @@ export class UserController {
             limits: { fileSize: 1024 * 1024 * 3 },
             fileFilter: (req, file, callback) => {
                 //Allow only images files
-                if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-                    return callback(
-                        new BadRequestException('Invalid file type'),
-                        false,
-                    );
-                }
+                // if (file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+                //     return callback(
+                //         new BadRequestException('Invalid file'),
+                //         false,
+                //     );
+                // }
                 callback(null, true);
             },
         }),
