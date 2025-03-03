@@ -12,7 +12,6 @@ import * as crypto from 'crypto';
 import { ChangePasswordDto } from './dto/changepass.dto';
 import * as argon2 from 'argon2';
 import * as Multer from 'multer';
-import { stat } from 'fs';
 
 @Injectable({})
 export class UserService {
@@ -24,12 +23,52 @@ export class UserService {
         private emailService: EmailService,
     ) {}
 
+    async GetMeDetils(user: any) {
+        try {
+            const find_user = await this.userRepository.findOne({
+                where: {
+                    id: user.id,
+                },
+                relations: ['chatcontacts'],
+                select: [
+                    'id',
+                    'MobileNumber',
+                    'UserName',
+                    'UserPhotoUrl',
+                    'Email',
+                    'IsValidated',
+                    'Created_At',
+                ],
+            });
+
+            if (!find_user) {
+                throw new HttpException('User Not Found', HttpStatus.NOT_FOUND);
+            }
+
+            return find_user;
+        } catch (err) {
+            throw new HttpException(
+                'Error Getting User Details',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
     async user_detail(MobileNumber: number) {
         try {
             // Fetch the user and include their contacts
             const user = await this.userRepository.findOne({
                 where: { MobileNumber },
                 relations: ['chatcontacts'], // Include chatcontacts in the query
+                select: [
+                    'id',
+                    'MobileNumber',
+                    'UserName',
+                    'UserPhotoUrl',
+                    'Email',
+                    'IsValidated',
+                    'Created_At',
+                ],
             });
 
             if (!user) {
@@ -39,10 +78,8 @@ export class UserService {
                 );
             }
 
-            // Optionally remove the password from the response
-            const { Password, ...userWithoutPassword } = user;
-
-            return userWithoutPassword;
+            // Return the user
+            return user;
         } catch (error) {
             throw new HttpException(
                 error.message,

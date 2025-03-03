@@ -28,6 +28,13 @@ export class UserController {
         private readonly cloudinaryService: CloudinaryService,
     ) {}
 
+    //Get LoggedIn User
+    @UseGuards(JwtAuthGuard)
+    @Get('me')
+    async getMe(@Request() req) {
+        return this.userservice.GetMeDetils(req.user);
+    }
+
     //Search By Global
     @UseGuards(JwtAuthGuard)
     @Get('details')
