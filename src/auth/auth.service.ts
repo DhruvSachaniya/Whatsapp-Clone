@@ -27,7 +27,8 @@ export class AuthService {
 
     SignIn(user: any) {
         return {
-            username: user.Username,
+            // username: user.Username,
+            user,
             token: this.jwt.sign({ sub: user.id }),
         };
     }
