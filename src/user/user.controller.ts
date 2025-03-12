@@ -105,4 +105,21 @@ export class UserController {
 
         return this.userservice.uploadProfilePicture(req.user, result.url);
     }
+
+    //TODO:- in chat entity add one more condition isImg
+    //TODO:- make route for genarate img cloudinary url
+    @UseGuards(JwtAuthGuard)
+    @Post('imgurl')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            limits: { fileSize: 1024 * 1024 * 3 },
+        }),
+    )
+    async uploadimgurl(@UploadedFile() file: Express.Multer.File) {
+        // get cloudinary img url
+        console.log('file', file);
+        const result = await this.cloudinaryService.uploadImage(file);
+
+        return result.url;
+    }
 }

@@ -21,6 +21,9 @@ export class ChatMeassage extends AbstractEntity<ChatMeassage> {
     @JoinColumn()
     ChatId: Chat;
 
+    @Column({ default: false })
+    IsImage: boolean;
+
     @Column({ nullable: true })
     Created_At: Date;
 
