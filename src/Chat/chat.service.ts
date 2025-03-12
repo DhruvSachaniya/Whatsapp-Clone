@@ -81,6 +81,7 @@ export class ChatService {
                 meassage: encrypt_chat,
                 ChatId: find_chat,
                 Created_At: date,
+                IsImage: dto.IsImg || false,
             });
 
             await this.ChatMeassageRepo.save(create_chat_meassage);
