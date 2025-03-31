@@ -78,10 +78,10 @@ export class ChatService {
             const create_chat_meassage = this.ChatMeassageRepo.create({
                 ownerId: user,
                 receiverId: receiver,
-                meassage: encrypt_chat,
+                meassage: dto.IsImage ? dto.meassage : encrypt_chat,
                 ChatId: find_chat,
                 Created_At: date,
-                IsImage: dto.IsImg || false,
+                IsImage: dto.IsImage || false,
             });
 
             await this.ChatMeassageRepo.save(create_chat_meassage);
