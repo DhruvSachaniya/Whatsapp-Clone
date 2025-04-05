@@ -104,4 +104,53 @@ export class SocketGateway
         console.log('Broadcasting user list:', this.users);
         this.server.emit('userList', this.users);
     }
+
+    @SubscribeMessage('callUser')
+    handleCallUser(
+        @MessageBody()
+        data: {
+            userToCall: string;
+            signalData: any;
+            from: string;
+            name: string;
+        },
+        @ConnectedSocket() client: Socket,
+    ) {
+        console.log("📥 Received 'callUser' event on backend!");
+        console.log('Received Data:', data);
+
+        // Look up socketId by userId if userToCall is not a socketId
+        const recipientSocketId = Object.keys(this.users).includes(
+            data.userToCall,
+        )
+            ? this.users[data.userToCall]
+            : data.userToCall; // Fallback to socketId if provided directly
+
+        console.log('Recipient socket ID:', recipientSocketId);
+
+        if (recipientSocketId) {
+            this.server.to(recipientSocketId).emit('callUser', {
+                signal: data.signalData,
+                from: data.from,
+                name: data.name,
+            });
+            console.log('📡 Sent callUser event to recipient!');
+        } else {
+            console.log('❌ User is offline or not found:', data.userToCall);
+        }
+    }
+
+    @SubscribeMessage('answerCall')
+    handleAnswerCall(
+        @MessageBody() data: { signal: any; to: string },
+        @ConnectedSocket() client: Socket,
+    ) {
+        const recipientSocketId = this.users[data.to];
+
+        if (recipientSocketId) {
+            this.server.to(recipientSocketId).emit('callAccepted', data.signal);
+        } else {
+            console.log('Caller is not online:', data.to);
+        }
+    }
 }
